@@ -1,0 +1,44 @@
+{
+    Resurse:
+    Am folosit laboratorul 3 de liste simplu inlantuite de la SD de anul trecut
+    ce contine structura de lista, nod si operatii precum cea de insert.
+    Am luat o parte din primele 2 lab-uri de APD pentru partea de thread-uri.
+}
+{
+    Am inceput prin a citi argumentele date, si prin a extrage numarul de Mapperi 
+    si pe cel de Reduceri. Apoi pe partea de citire in main am mai retinut numarul 
+    de fisiere ce trebuie citite si numarul testului curent.
+    Am facut o matrice[i][j] de liste pe care sa o folosesc in functia f pentru mapperi
+    si reduceri, in care i reprezinta mapper-ul si j reducer-ul. Totodata am o 
+    structura pe care o voi folosi in functia f. 
+
+    Am creat apoi thread-urile necesare pentru Mapperi si Reduceri.
+    Functia f e separata in partea pentru Mapperi (pana cand id-ul thread-ului 
+    depaseste numarul de mapperi), si cea pentru Reduceri, intre care am 
+    folosit o bariera pentru a astepta toate thread-urile si respectiv mapperii sa 
+    isi termine treaba. 
+
+    In partea de Mapperi, am pus un mutex pentru a nu permite mai multor thread-uri 
+    sa acceseze acelasi fisier. Mapperul apoi citeste fisierul "test%d/in%d.txt" 
+    unde primul %d reprezinta numarul testului retinut mai sus, iar al doilea %d este 
+    un index j. Avem un Index pe care il stiu toate threadurile, si inca un index 
+    local j al fiecarui mapper. Acest j, intr-un mutex, ia valoarea Indexului. 
+    Indexul e apoi incrementat, cat timp e mai mic decat numarul de fisiere sursa, 
+    tot in mutex. Acest mutex are ca scop sa nu lase mai multe thread-uri sa aiba
+    acelasi index. (Stiu ca e putin hardcodata citirea. As fi putut pune fiecare
+    test de input intr-un vector de string-uri si sa le accesez cu aceeasi idee de 
+    index.)
+
+    Apoi face binarySearch pe fiecare numar pentru a vedea daca e putere perfecta, 
+    caz in care il baga in lista partiala.
+    binarySearch-ul l-am implementat recursiv. Verifica mereu daca mid-ul la puterea
+    data e egal cu numarul, altfel face binarySearch pe stanga sau pe dreapta. Cand
+    il apelez, mereu incepe de la 2 si end-ul e radical de ordinul z(implementat manual) 
+    din maximul posibil de unsigned int.
+
+    In partea de Reduceri, pentru fiecare Mapper verific puterea corespunzatoare 
+    Reducerului si adaug in lista finala elementele care coincid. Apoi fac un while
+    in care numar cate elemente unice sunt in lista asta. 
+
+    In final printez numarul total pentru fiecare reducer.
+}
