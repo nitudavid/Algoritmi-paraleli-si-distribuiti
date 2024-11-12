@@ -1,0 +1,43 @@
+Tema 3 APD - David Nitu
+
+1. MyDispatcher
+
+Folosesc un switch pentru a alege cui se trimite un host in functie de tipul de SchedulingAlgorithm:
+- pentru round robin, folosesc un AtomicInteger pentru a tine numarul taskurilor. Se foloseste atomic ca sa nu
+apara probleme de multithreading (sincronizare).
+- pentru shortest queue, se trece prin task-uri si se alege cel cu lungimea cozii cea mai mica
+- pentru least work left, la fel ca mai sus dar se alege cel cu cel mai putin timp ramas de executat
+- pentru size interval, se adauga unui host in functie de tipul de task conform cerintei
+
+2. MyHost
+
+Se foloseste o variabila bool pentru a opri host-ul. Atunci cand variabila (running) devine false, se opreste
+loop-ul din run.
+Lista de task-uri se tine intr-un PriorityBlockingQueue, care este un PriorityQueue care poate fi accesat din
+mai multe thread-uri simultan. Folosesc clasa FIFO comparable pentru a putea sorta task-urile dupa prioritate si dupa
+ordinea in care au fost adaugate in lista (id), daca au aceeasi prioritate.
+Exista si un obiect "lock" pentru sincronizare (mutex) si pentru wait/notify.
+Mai folosesc variabilele:
+- pausedTask: atunci cand un "preemptable" task este oprit (pus pe pauza) pentru a porni alt task, este memorat aici
+- currentTask: task-ul care ruleaza in prezent
+- start: momentul de timp la care a pornit currentTask
+- replacementTask - task-ul cu care trebuie inlocuit currentTask
+Toate aceste variabile sunt volatile pentru a putea fi accesate din mai multe thread-uri fara probleme de actualizare.
+
+Metoda run este un loop (continua cat timp "running" este true) care alege primul task din coada de task-uri
+(sau continua pausedTask, daca exista). Se salveaza task-ul in "currentTask" si timpul curent in "start" (pentru functiile
+de getQueueSize si getWorkLeft).
+Daca task-ul nu este preemptable, doar il executa pe tot (cu un sleep).
+Daca task-ul este preemptable, se asteapta insa cu wait pe lock. Daca alt task trebuie adaugat, se da notify pentru a opri
+wait-ul mai repede. Dupa wait, se verifica daca task-ul s-a executat cu totul, sau daca a fost oprit. Daca a fost oprit, se
+actualizeaza timpul ramas de asteptat al task-ului (left) si se salveaza in pausedTask, pentru a fi reluat dupa ce se executa
+noul task primit (replacementTask).
+
+Functia de addTask:
+- daca taskul curent este preemptable si daca are prioritate mai mica decat cel nou: se da notify pentru a se opri task-ul curent
+si pentru a fi inlocuit cu cel nou
+- altfel: se adauga task-ul nou in coada de prioritati
+
+getQueueSize: intoarce lungimea cozii, plus 1 pentru pausedTask si currentTask (daca exista)
+
+getWorkLeft: intoarce suma work-urilor task-urilor din coada, plus work-ul ramas pentru pausedTask si currentTask (daca exista).
